@@ -117,7 +117,7 @@ int main() {
                 close(clientSocket);
                 clientSocket = -1;
             } else {
-                perror("recv unknown error");
+                perror("Error receiving data");
                 return -1;
             }
         }
