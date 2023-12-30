@@ -10,8 +10,8 @@
 
 volatile sig_atomic_t wasSighup = 0;
 
-void sighupHandler(int signalNumber) {
-    if (signalNumber == SIGHUP) {
+void sighupHandler(int signal) {
+    if (signal == SIGHUP) {
         wasSighup = 1;
     }
 }
@@ -58,7 +58,7 @@ int main() {
         FD_ZERO(&readFileDescriptors);
         FD_SET(serverSocket, &readFileDescriptors);
 
-        if(clientSocket != -1) {
+        if (clientSocket != -1) {
             FD_SET(clientSocket, &readFileDescriptors);
         }
 
@@ -69,7 +69,9 @@ int main() {
             maxFd = clientSocket;
         }
 
-        if (pselect(maxFd + 1, &readFileDescriptors, nullptr, nullptr, nullptr, &origMask) == -1) {
+        int pSelectResult = pselect(maxFd + 1, &readFileDescriptors, nullptr, nullptr, nullptr, &origMask);
+
+        if (pSelectResult == -1) {
             if (errno == EINTR) {
                 if (wasSighup) {
                     printf("Received SIGHUP");
@@ -85,7 +87,7 @@ int main() {
         }
 
         if (FD_ISSET(serverSocket, &readFileDescriptors)) {
-            if ((socketForAcceptingConnections = accept(serverSocket, NULL, NULL)) == -1) {
+            if ((socketForAcceptingConnections = accept(serverSocket, nullptr, nullptr)) == -1) {
                 perror("accept error");
                 return -1;
             }
@@ -93,6 +95,7 @@ int main() {
             if (clientSocket == -1) {
                 clientSocket = socketForAcceptingConnections;
                 printf("new client, socket num = %d \n", clientSocket);
+                FD_SET(clientSocket, &readFileDescriptors);
             } else {
                 close(socketForAcceptingConnections);
             }
@@ -115,6 +118,7 @@ int main() {
             }
         }
     }
+
     close(serverSocket);
     close(clientSocket);
     return 0;
