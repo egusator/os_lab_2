@@ -81,9 +81,13 @@ int main() {
                     return -1;
                 }
             } else {
-                perror("Pselect unknown error.");
+                perror("PSelect unknown error.");
                 return -1;
             }
+        }
+
+        if (pSelectResult == 0) {
+            continue;
         }
 
         if (FD_ISSET(serverSocket, &readFileDescriptors)) {
