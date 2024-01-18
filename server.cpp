@@ -5,7 +5,7 @@
 #include <csignal>
 #include <cerrno>
 
-#define CLIENTS_AMOUNT 1
+#define CLIENTS_AMOUNT 1000
 #define PORT 8080
 
 volatile sig_atomic_t wasSighup = 0;
