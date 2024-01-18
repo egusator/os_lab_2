@@ -17,34 +17,40 @@ void sighupHandler(int signal) {
 }
 
 int main() {
+    //создаем сокет, ниче необычного
     int serverSocket = socket(AF_INET, SOCK_STREAM, 0);
     if (serverSocket == -1) {
         perror("Socket creation error");
         return 1;
     }
 
+    //регистрируем обработчик сигналов, условно говорим, что на приход сигнала SIGHUP процесс должен вызвать метод sighupHandler
     struct sigaction sa{};
     sigaction(SIGHUP, nullptr, &sa);
     sa.sa_handler = sighupHandler;
     sa.sa_flags |= SA_RESTART;
     sigaction(SIGHUP, &sa, nullptr);
 
+    //заполняем инфу о сокете 
     sockaddr_in serverAddress{};
     serverAddress.sin_family = AF_INET;
     serverAddress.sin_port = htons(PORT);
     serverAddress.sin_addr.s_addr = INADDR_ANY;
     memset(serverAddress.sin_zero, 0, sizeof(serverAddress.sin_zero));
 
+    //биндим - условно просто вот инфу этой структуры sockaddr_in прикрепляем к этому сокету
     if (bind(serverSocket, (struct sockaddr *) &serverAddress, sizeof(serverAddress)) == -1) {
         perror("Socket binding error");
         return 1;
     }
 
+    //начинаем прослушивание (clients_amount - максимальное количество клиентов в очереди на чтение нашим сокетом)
     if (listen(serverSocket, CLIENTS_AMOUNT) == -1) {
         perror("Listening error");
         return 1;
     }
 
+    //блокируем сигнал SIGHUP (если честно, я не совсем понял, зачем это надо) 
     sigset_t blockedMask, origMask;
     sigemptyset(&blockedMask);
     sigaddset(&blockedMask, SIGHUP);
